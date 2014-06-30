@@ -1,30 +1,50 @@
-# Ian Castillo Rosales
-# Opciones
-# 23962014
+# Ian Castillo Rosales (BANXICO\T41348)
+# Gerencia de Información del Sistema Financiero
+# Subgerencia de Información de Moneda Extranjera y Derivados
+# 
+# Validación de información para operaciones con opciones
+# 230614 - 300414
 
-opto <- function(){
-      # ===== OPCIONES =====
+opto <- function(ruta){
+      
+      # ENTRADA
+      # ruta = Ruta donde se encuentran los datos para los calculos
+            # opto.dbf
+            # udi2013.dbf
+            # fix.dbf
       
       # SALIDA
-      # cuadro_opto_[fecha].dbf - Archivo tipo .dbf con los resultados
+      # opto_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd("/Volumes/IAN/Estadisticas/Contraparte/OPTO") # ¿Dónde están mis datos?
+      setwd(paste(ruta, "/OPTO/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999)
-      options(encoding="UTF-8")
+      options(scipen=999, digits=5)
       
       # ===== Carga de datos =====
       data <- read.dbf("opto.dbf", as.is=T)
       gc()
       udis <- read.dbf("udi2013.dbf", as.is=T)
-      gc()
       fix <- read.dbf("tcfix.dbf", as.is=T)
-      gc()
+      
       clave_deri <- read.csv("clave_deri.csv", as.is=T)
       
       # ===== Codigo ====
-      data$FE_CON_OPE <- as.Date(data$FE_CON_OPE) # Cambiar tipo caractér a tipo fecha
+      # apply(data, 2, function(x) any(is.na(x)))
+      # Colocamos los registros que contengan casos incompletos (con NA's)
+      raros <- data[!complete.cases(data$TIP_INSTI, data$FE_CON_OPE, data$FE_VEN_OPE, 
+                                    data$MDO, data$TIP_OPE, data$OPC, data$CLASE_OPE,
+                                    data$C_IMP_BASE, data$MDA_IMP, data$FE_VEN_ORI, 
+                                    data$CONSEC_CF, data$ID_CF), ]
+      # Escogemos los registros que contengan casos completos (sin NA's)
+      data <- data[complete.cases(data$TIP_INSTI, data$FE_CON_OPE, data$FE_VEN_OPE, 
+                                  data$MDO, data$TIP_OPE, data$OPC, data$CLASE_OPE,
+                                  data$C_IMP_BASE, data$MDA_IMP, data$FE_VEN_ORI, 
+                                  data$CONSEC_CF, data$ID_CF), ]
+      # Arrojamos un mensaje en caso de que existan casos incompletos
+      if(nrow(raros)!=0){
+            message("¡Existen registros incompletos!")
+      }
       
       # ===== Tipo de Institucion =====
       data$TIPO_INST <- NA
@@ -32,8 +52,8 @@ opto <- function(){
       data$TIPO_INST[substr(data$INSTI, 1, 3) != "013"] <- "BM_BD"
       
       # ===== UDIS y FIX =====
-      data$UDIS <- udis$CIERRE[match(data$FE_CON_OPE, as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
-      data$FIX <- fix$CIERRE[match(data$FE_CON_OPE, as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
+      data$UDIS <- udis$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
+      data$FIX <- fix$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
       
       # ===== Importe =====
       data$IMPORTE <- NA
@@ -76,7 +96,7 @@ opto <- function(){
       # ===== Sector =====
       data$SECTOR <- NA
       
-      data$SECTOR[data$TIPO_ENTE==4 &data$RESI=="MX" ] <- "Bancos Comerciales"
+      data$SECTOR[data$TIPO_ENTE==4 &data$RESI=="MX" ] <- "Bancos Múltiples"
       data$SECTOR[data$TIPO_ENTE==5 &data$RESI=="MX" ] <- "Bancos de Desarrollo"
       data$SECTOR[data$TIPO_ENTE==6 &data$RESI=="MX" ] <- "Casas de Bolsa"
       
@@ -123,7 +143,7 @@ opto <- function(){
       
       # ===== WRITE =====
       # Escribe el cuadro (.dbf) en el directorio de trabajo
-      write.dbf(data, paste("cuadro_opto_contra_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
+      write.dbf(data, paste("opto_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
+      
+      data
 }
-
-system.time(opto())
