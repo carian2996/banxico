@@ -1,20 +1,33 @@
-# Ian Castillo Rosales
-# 26062014
+# Ian Castillo Rosales (BANXICO\T41348)
+# Gerencia de Información del Sistema Financiero
+# Subgerencia de Información de Moneda Extranjera y Derivados
+# 
+# Validación de información para operaciones con swaps (plazo)
+# 230614 - 300414
 
-swapsc_junta <- function(ruta1, ruta2, ruta3, ruta4){
+swapsc_junta <- function(ruta){
+      ruta="/Volumes/IAN/Estadisticas/Contraparte/"
       
-      options(scipen=999)
-      options(encoding="UTF-8")
+      # ENTRADA
+      # ruta = Ruta donde se encuentran los archivos .R para los cálculos
       
-      source(ruta1)
-      source(ruta2)
-      source(ruta3)
-      source(ruta4)
+      # SALIDA
+      # swaps_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
       
-      s1 <- swaps1_contra()
-      s2 <- swaps2_contra()
-      s3 <- swaps3_contra()
-      s4 <- swaps4_contra()
+      # ===== Librerias y directorios =====
+      library(foreign) # Libreria necesaria para cargar los datos
+      options(scipen=999, digits=5) # Quita la notación exp y trunca a 4 decimales
+      
+      # ===== Funciones =====
+      source(paste(ruta, "R/swaps1_contra.R", sep=""))
+      source(paste(ruta, "R/swaps2_contra.R", sep=""))
+      source(paste(ruta, "R/swaps3_contra.R", sep=""))
+      source(paste(ruta, "R/swaps4_contra.R", sep=""))
+      
+      s1 <- swaps1_contra(ruta)
+      s2 <- swaps2_contra(ruta)
+      s3 <- swaps3_contra(ruta)
+      s4 <- swaps4_contra(ruta)
       
       s1$SECCION <- "I"
       s2$SECCION <- "II"
@@ -36,5 +49,7 @@ swapsc_junta <- function(ruta1, ruta2, ruta3, ruta4){
       swaps[swaps$SECCION=="III", columnas] <- s3[, columnas]
       swaps[swaps$SECCION=="VI", columnas] <- s4[, columnas]
       
-      write.dbf(swaps, paste("swaps_contra_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
+      write.dbf(swaps, paste("swaps_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
+      
+      swaps
 }
