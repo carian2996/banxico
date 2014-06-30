@@ -1,0 +1,114 @@
+# Ian Castillo Rosales
+# 26062014
+
+swaps4_plazo <- function(){
+      
+      # SALIDA
+      # swaps4_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
+      
+      # ===== Librerias y directorios =====
+      setwd("/Volumes/IAN/Estadisticas/Plazo/SWAPS") # ¿Dónde están mis datos?
+      library(foreign) # Libreria necesaria para cargar los datos
+      options(scipen=999)
+      options(encoding="UFT-8")
+      
+      # ===== Carga de datos =====
+      data <- read.dbf("swaps4.dbf", as.is=T)
+      udis <- read.dbf("udi2013.dbf", as.is=T)
+      fix <- read.dbf("tcfix.dbf", as.is=T)
+      
+      # ===== Código =====
+      data <- data[complete.cases(data$FE_CON_OPE, data$C_IMP_BA_R, data$C_IMP_RE_D, 
+                                  data$C_IMP_BA_E, data$C_IMP_EN_D, data$CONT, 
+                                  data$TIP_CONT, data$FE_ORI_RE, data$FE_ORI_EN), ]
+      raros <- data[!complete.cases(data$FE_CON_OPE, data$C_IMP_BA_R, data$C_IMP_RE_D, 
+                                    data$C_IMP_BA_E, data$C_IMP_EN_D, data$CONT, 
+                                    data$TIP_CONT, data$FE_ORI_RE, data$FE_ORI_EN), ]
+      if(nrow(raros)!=0){
+            message("Existen registros incompletos")
+      }
+      
+      data$FE_CON_OPE <- as.Date(data$FE_CON_OPE) # Cambiar tipo caractér a tipo fecha
+      data$FE_ORI_EN <- as.Date(data$FE_ORI_EN)
+      data$FE_ORI_RE <- as.Date(data$FE_ORI_RE)
+      
+      # ===== Tipo de Institucion =====
+      data$TIPO_INST <- NA
+      data$TIPO_INST[substr(data$INSTI, 1, 3) == "013"] <- "CB"
+      data$TIPO_INST[substr(data$INSTI, 1, 3) != "013"] <- "BM_BD"
+      
+      # ===== UDIS y FIX =====
+      data$UDIS <- udis$CIERRE[match(data$FE_CON_OPE, as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
+      data$FIX <- fix$CIERRE[match(data$FE_CON_OPE, as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
+      
+      # ===== IMPORTE =====
+      data$IMPORTE_R <- NA
+      data$IMPORTE_E <- NA
+      
+      data1 <- data[!is.na(data$MDA_IMP_RE), ]
+      data2 <- data[is.na(data$MDA_IMP_RE), ]
+      
+      # ===== Importe R =====
+      data1$IMPORTE_R[data1$MDA_IMP_RE=="MXP" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_R[data1$MDA_IMP_RE=="MXP" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      data1$IMPORTE_R[data1$MDA_IMP_RE=="UDI" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_R[data1$MDA_IMP_RE=="UDI" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$UDIS[data1$MDA_IMP_RE=="UDI" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      data1$IMPORTE_R[data1$MDA_IMP_RE=="USD" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_R[data1$MDA_IMP_RE=="USD" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[data1$MDA_IMP_RE=="USD" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      data1$IMPORTE_R[!(data1$MDA_IMP_RE=="MXP" | data1$MDA_IMP_RE=="UDI" | data1$MDA_IMP_RE=="USD") & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_RE_D[!(data1$MDA_IMP_RE=="MXP" | data1$MDA_IMP_RE=="UDI" | data1$MDA_IMP_RE=="USD") & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[!(data1$MDA_IMP_RE=="MXP" | data1$MDA_IMP_RE=="UDI" | data1$MDA_IMP_RE=="USD") & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      
+      data1$IMPORTE_R[data1$MDA_IMP_RE=="MXP" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_R[data1$MDA_IMP_RE=="MXP" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      data1$IMPORTE_R[data1$MDA_IMP_RE=="UDI" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_R[data1$MDA_IMP_RE=="UDI" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$UDIS[data1$MDA_IMP_RE=="UDI" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      data1$IMPORTE_R[data1$MDA_IMP_RE=="USD" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_R[data1$MDA_IMP_RE=="USD" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[data1$MDA_IMP_RE=="USD" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      data1$IMPORTE_R[!(data1$MDA_IMP_RE=="MXP" | data1$MDA_IMP_RE=="UDI" | data1$MDA_IMP_RE=="USD") & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_RE_D[!(data1$MDA_IMP_RE=="MXP" | data1$MDA_IMP_RE=="UDI" | data1$MDA_IMP_RE=="USD") & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[!(data1$MDA_IMP_RE=="MXP" | data1$MDA_IMP_RE=="UDI" | data1$MDA_IMP_RE=="USD") & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      
+      # ===== Importe E =====
+      data1$IMPORTE_E[data1$MDA_IMP_EN=="MXP" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_E[data1$MDA_IMP_EN=="MXP" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      data1$IMPORTE_E[data1$MDA_IMP_EN=="UDI" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_E[data1$MDA_IMP_EN=="UDI" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$UDIS[data1$MDA_IMP_EN=="UDI" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      data1$IMPORTE_E[data1$MDA_IMP_EN=="USD" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_E[data1$MDA_IMP_EN=="USD" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[data1$MDA_IMP_EN=="USD" & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      data1$IMPORTE_E[!(data1$MDA_IMP_EN=="MXP" | data1$MDA_IMP_EN=="UDI" | data1$MDA_IMP_EN=="USD") & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_EN_D[!(data1$MDA_IMP_EN=="MXP" | data1$MDA_IMP_EN=="UDI" | data1$MDA_IMP_EN=="USD") & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[!(data1$MDA_IMP_EN=="MXP" | data1$MDA_IMP_EN=="UDI" | data1$MDA_IMP_EN=="USD") & (data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/2000
+      
+      data1$IMPORTE_E[data1$MDA_IMP_EN=="MXP" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_E[data1$MDA_IMP_EN=="MXP" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      data1$IMPORTE_E[data1$MDA_IMP_EN=="UDI" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_E[data1$MDA_IMP_EN=="UDI" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$UDIS[data1$MDA_IMP_EN=="UDI" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      data1$IMPORTE_E[data1$MDA_IMP_EN=="USD" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_BA_E[data1$MDA_IMP_EN=="USD" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[data1$MDA_IMP_EN=="USD" & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      data1$IMPORTE_E[!(data1$MDA_IMP_EN=="MXP" | data1$MDA_IMP_EN=="UDI" | data1$MDA_IMP_EN=="USD") & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")] <- data1$C_IMP_EN_D[!(data1$MDA_IMP_EN=="MXP" | data1$MDA_IMP_EN=="UDI" | data1$MDA_IMP_EN=="USD") & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]*data1$FIX[!(data1$MDA_IMP_EN=="MXP" | data1$MDA_IMP_EN=="UDI" | data1$MDA_IMP_EN=="USD") & !(data1$TIP_CONT=="RCB" | data1$TIP_CONT=="RIC")]/1000
+      
+      # ===== Importe R =====
+      data2$IMPORTE_R[(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")] <- data2$C_IMP_RE_D[(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]*data2$FIX[(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]/2000
+      data2$IMPORTE_R[!(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")] <- data2$C_IMP_RE_D[!(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]*data2$FIX[!(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]/1000
+      
+      # ===== Importe E =====
+      data2$IMPORTE_E[(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")] <- data2$C_IMP_EN_D[(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]*data2$FIX[(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]/2000
+      data2$IMPORTE_E[!(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")] <- data2$C_IMP_EN_D[!(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]*data2$FIX[!(data2$TIP_CONT=="RCB" | data2$TIP_CONT=="RIC")]/1000
+      
+      # ===== Importe =====
+      data$IMPORTE_R[!is.na(data$MDA_IMP_RE)] <- data1$IMPORTE_R
+      data$IMPORTE_R[is.na(data$MDA_IMP_RE)] <- data2$IMPORTE_R
+      
+      data$IMPORTE_E[!is.na(data$MDA_IMP_EN)] <- data1$IMPORTE_E
+      data$IMPORTE_E[is.na(data$MDA_IMP_EN)] <- data2$IMPORTE_E
+      
+      data$IMPORTE <- NA
+      data$IMPORTE <- apply(data[, c(18, 19)], 1, max)
+      
+      # ===== Plazo =====
+      # Calcula máximo entre fecha de entrega y fecha de recibo
+      nueva_fecha <- apply(data[, c(13, 14)], 1, max)
+      nueva_fecha <- as.Date(nueva_fecha)
+      # Realiza la diferencia entre fechas, excepto cuando no haya fecha de liquidación
+      data$PLAZO <- as.numeric(nueva_fecha - data$FE_CON_OPE)
+      
+      # ===== BANDA =====
+      # Matriz de bandas
+      bandas <- matrix(0, nrow=14, ncol=2)
+      bandas[, 1] <- c(0, 8, 32, 93, 185, 367, 732, 1097, 1462, 1828, 2558, 3654, 5480, 7306)
+      bandas[, 2] <- c("1 a 7", "8 a 31", "32 a 92", "93 a 184", "185 a 366", "367 a 731", "732 a 1096", "1097 a 1461", "1462 a 1827", "1828 a 2557", "2558 a 3653", "3654 a 5479", "5480 a 7305", "Más de 7306")
+      
+      # Crear y renombrar columna de bandas
+      data$BANDAS <- NA
+      # Encuentra el intervalo y pone la banda
+      data$BANDAS <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
+      
+      # ===== WRITE =====
+      # Escribe el cuadro (.dbf) en el directorio de trabajo
+      write.dbf(data, paste("swaps4_plazo_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
+      
+      data
+}
