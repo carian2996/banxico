@@ -1,17 +1,25 @@
-# Ian Castillo Rosales
-# 26062014
+# Ian Castillo Rosales (BANXICO\T41348)
+# Gerencia de Información del Sistema Financiero
+# Subgerencia de Información de Moneda Extranjera y Derivados
+# 
+# Validación de información para operaciones con swaps (contraparte)
+# 090614 - 300414
 
-swaps1_contra <- function(){
-      # ===== SWAPS 1 =====
+swaps1_contra <- function(ruta){
+      
+      # ENTRADA
+      # ruta = Ruta donde se encuentran los datos para los calculos
+            # swaps4.dbf
+            # udi2013.dbf
+            # fix.dbf
       
       # SALIDA
-      # cuadro_swaps1_[fecha].dbf - Archivo tipo .dbf con los resultados
+      # swaps1_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd("/Volumes/IAN/Estadisticas/Contraparte/SWAPS") # ¿Dónde están mis datos?
+      setwd(paste(ruta, "/SWAPS/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999)
-      options(encoding="UTF-8")
+      options(scipen=999, digits=5)
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps1.dbf", as.is=T)
@@ -31,16 +39,14 @@ swaps1_contra <- function(){
             message("Existen registros incompletos")
       }
       
-      data$FE_CON_OPE <- as.Date(data$FE_CON_OPE) # Cambiar tipo caractér a tipo fecha
-      
       # ===== Tipo de Institucion =====
       data$TIPO_INST <- NA
       data$TIPO_INST[substr(data$INSTI, 1, 3) == "013"] <- "CB"
       data$TIPO_INST[substr(data$INSTI, 1, 3) != "013"] <- "BM_BD"
       
       # ===== UDIS y FIX =====
-      data$UDIS <- udis$CIERRE[match(data$FE_CON_OPE, as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos 
-      data$FIX <- fix$CIERRE[match(data$FE_CON_OPE, as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
+      data$UDIS <- udis$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos 
+      data$FIX <- fix$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
       
       # ===== IMPORTE =====
       data$IMPORTE <- NA
@@ -54,7 +60,7 @@ swaps1_contra <- function(){
       
       # ===== WRITE =====
       # Escribe el cuadro (.dbf) en el directorio de trabajo
-      write.dbf(data, paste("swaps1_contra_", format(Sys.Date()[1], "%d_%m_%Y"), "dbf", sep=""))
+      write.dbf(data, paste("swaps1_contra_", format(Sys.Date()[1], "%d%m%Y"), "dbf", sep=""))
       
       data
 }
