@@ -2,21 +2,20 @@
 # Gerencia de Información del Sistema Financiero
 # Subgerencia de Información de Moneda Extranjera y Derivados
 # 
-# Validación de información para operaciones con swaps (plazo)
+# Validación de información para operaciones con swaps (contra)
 # 230614 - 300414
 
-swapsc_junta <- function(ruta){
+swaps_contra_junta <- function(ruta){
       ruta="/Volumes/IAN/Estadisticas/Contraparte/"
-      
       # ENTRADA
       # ruta = Ruta donde se encuentran los archivos .R para los cálculos
       
       # SALIDA
-      # swaps_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
+      # swaps_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=5) # Quita la notación exp y trunca a 4 decimales
+      options(scipen=999, digits=10) # Quita la notación exp y trunca a 4 decimales
       
       # ===== Funciones =====
       source(paste(ruta, "R/swaps1_contra.R", sep=""))
@@ -24,10 +23,29 @@ swapsc_junta <- function(ruta){
       source(paste(ruta, "R/swaps3_contra.R", sep=""))
       source(paste(ruta, "R/swaps4_contra.R", sep=""))
       
-      s1 <- swaps1_contra(ruta)
-      s2 <- swaps2_contra(ruta)
-      s3 <- swaps3_contra(ruta)
-      s4 <- swaps4_contra(ruta)
+      if(class(swaps1_contra(ruta))=="data.frame"){
+            s1 <- swaps1_contra(ruta)
+      } else{
+            s1 <- swaps1_contra(ruta)$"cuadro"
+      }
+      
+      if(class(swaps1_contra(ruta))=="data.frame"){
+            s2 <- swaps2_contra(ruta)
+      } else{
+            s2 <- swaps2_contra(ruta)$"cuadro"
+      }
+      
+      if(class(swaps1_contra(ruta))=="data.frame"){
+            s3 <- swaps3_contra(ruta)
+      } else{
+            s3 <- swaps3_contra(ruta)$"cuadro"
+      }
+      
+      if(class(swaps1_contra(ruta))=="data.frame"){
+            s4 <- swaps4_contra(ruta)
+      } else{
+            s4 <- swaps4_contra(ruta)$"cuadro"
+      }
       
       s1$SECCION <- "I"
       s2$SECCION <- "II"
@@ -52,4 +70,5 @@ swapsc_junta <- function(ruta){
       write.dbf(swaps, paste("swaps_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       swaps
+      # apply(swaps, 2, function(x) any(is.na(x)))
 }
