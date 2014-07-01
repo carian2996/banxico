@@ -3,7 +3,7 @@
 # Subgerencia de Información de Moneda Extranjera y Derivados
 # 
 # Validación de información para operaciones con swaps (plazo)
-# 160614 - 300414
+# 160614 - 310414
 
 swaps4_contra <- function(ruta){
       
@@ -17,9 +17,9 @@ swaps4_contra <- function(ruta){
       # swaps4_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd(paste(ruta, "/SWAPS/", sep="")) # ?D?nde est?n mis datos?
+      setwd(paste(ruta, "SWAPS/", sep="")) # ?D?nde est?n mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=5) # Quita la notaci?n exp y trunca a 4 decimales
+      options(scipen=999, digits=10) # Quita la notaci?n exp y trunca a 4 decimales
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps4.dbf", as.is=T)
@@ -30,14 +30,15 @@ swaps4_contra <- function(ruta){
       clave_deri <- read.csv("clave_deri.csv", as.is=T)
       
       # ===== Código =====
-      data <- data[complete.cases(data$FE_CON_OPE, data$C_IMP_BA_R, data$C_IMP_RE_D, 
-                                  data$C_IMP_BA_E, data$C_IMP_EN_D, data$CONT, 
-                                  data$TIP_CONT), ]
-      raros <- data[!complete.cases(data$FE_CON_OPE, data$C_IMP_BA_R, data$C_IMP_RE_D, 
-                                    data$C_IMP_BA_E, data$C_IMP_EN_D, data$CONT, 
-                                    data$TIP_CONT), ]
+      # apply(data, 2, function(x) any(is.na(x)))
+      
+      # Colocamos los registros que contengan casos incompletos (con NA's)
+      raros <- data[!complete.cases(data[, -c(4, 8)]), ]
+      # Escogemos los registros que contengan casos completos (sin NA's)
+      data <- data[complete.cases(data[, -c(4, 8)]), ]
+      # Arrojamos un mensaje en caso de que existan casos incompletos
       if(nrow(raros)!=0){
-            message("Existen registros incompletos")
+            message("Existen registros incompletos para Swaps3 Contra")
       }
       
       # ===== Tipo de Institucion =====
@@ -100,8 +101,8 @@ swaps4_contra <- function(ruta){
       data$TIPO_ENTE <- NA
       data$RESI <- NA
       
-      data$TIPO_ENTE[!is.na(data$CONT)] <- clave_deri$tipo_ente[match(data$CONT[!is.na(data$CONT)], clave_deri$clave_deri)]
-      data$RESI[!is.na(data$CONT)] <- clave_deri$residencia[match(data$CONT[!is.na(data$CONT)], clave_deri$clave_deri)]
+      data$TIPO_ENTE<- clave_deri$tipo_ente[match(data$CONT, clave_deri$clave_deri)]
+      data$RESI <- clave_deri$residencia[match(data$CONT, clave_deri$clave_deri)]
       
       # ===== Sector =====
       data$SECTOR[data$TIPO_ENTE==4 &data$RESI=="MX" ] <- "Bancos Múltiples"
@@ -147,5 +148,10 @@ swaps4_contra <- function(ruta){
       # Escribe el cuadro (.dbf) en el directorio de trabajo
       write.dbf(data, paste("swaps4_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
-      data
+      if(nrow(raros)!=0){
+            resultado <- list(cuadro=data, raros=raros)
+            invisible(resultado)
+      } else{
+            invisible(data)
+      }
 }
