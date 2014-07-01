@@ -5,7 +5,7 @@
 # Validación de información para operaciones con swaps (plazo)
 # 040614 - 300414
 
-swapsp_junta <- function(ruta){
+swaps_plazo_junta <- function(ruta){
       
       # ENTRADA
       # ruta = Ruta donde se encuentran los archivos .R para los cálculos
@@ -23,10 +23,29 @@ swapsp_junta <- function(ruta){
       source(paste(ruta, "R/swaps3_plazo.R", sep=""))
       source(paste(ruta, "R/swaps4_plazo.R", sep=""))
       
-      s1 <- swaps1_plazo(ruta)
-      s2 <- swaps2_plazo(ruta)
-      s3 <- swaps3_plazo(ruta)
-      s4 <- swaps4_plazo(ruta)
+      if(class(swaps1_plazo(ruta))=="data.frame"){
+            s1 <- swaps1_plazo(ruta)
+      } else{
+            s1 <- swaps1_plazo(ruta)$"cuadro"
+      }
+      
+      if(class(swaps1_plazo(ruta))=="data.frame"){
+            s2 <- swaps2_plazo(ruta)
+      } else{
+            s2 <- swaps2_plazo(ruta)$"cuadro"
+      }
+      
+      if(class(swaps1_plazo(ruta))=="data.frame"){
+            s3 <- swaps3_plazo(ruta)
+      } else{
+            s3 <- swaps3_plazo(ruta)$"cuadro"
+      }
+      
+      if(class(swaps1_plazo(ruta))=="data.frame"){
+            s4 <- swaps4_plazo(ruta)
+      } else{
+            s4 <- swaps4_plazo(ruta)$"cuadro"
+      }
       
       # ===== JUNTA =====
       s1$SECCION <- "I"
@@ -53,4 +72,5 @@ swapsp_junta <- function(ruta){
       write.dbf(swaps, paste("swaps_plazo_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
       
       swaps
+      # apply(swaps, 2, function(x) any(is.na(x)))
 }
