@@ -3,7 +3,7 @@
 # Subgerencia de Información de Moneda Extranjera y Derivados
 # 
 # Validación de información para operaciones con swaps (plazo)
-# 040614 - 300414
+# 040614 - 010714
 
 swaps2_plazo <- function(ruta){
       
@@ -17,9 +17,9 @@ swaps2_plazo <- function(ruta){
       # swaps2_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd(paste(ruta, "/SWAPS/", sep="")) # ¿Dónde están mis datos?
+      setwd(paste(ruta, "SWAPS/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Librería necesaria para cargar los datos
-      options(scipen=999, digits=5) # Quita la notación exp y trunca a 4 decimales
+      options(scipen=999, digits=10) # Quita la notación exp y trunca a 4 decimales
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps2.dbf", as.is=T)
@@ -28,14 +28,15 @@ swaps2_plazo <- function(ruta){
       fix <- read.dbf("tcfix.dbf", as.is=T)
       
       # ===== Código =====
-      data <- data[complete.cases(data$FE_CON_OPE, data$C_IMP_BASE, data$MDA_IMP, 
-                                  data$C_IMP_BA_D, data$CONT, data$TIP_CONT, 
-                                  data$FE_ORI_RE, data$FE_ORI_EN), ]
-      raros <- data[!complete.cases(data$FE_CON_OPE, data$C_IMP_BASE, data$MDA_IMP, 
-                                    data$C_IMP_BA_D, data$CONT, data$TIP_CONT, 
-                                    data$FE_ORI_RE, data$FE_ORI_EN),]
+      # apply(data, 2, function(x) any(is.na(x)))
+      
+      # Colocamos los registros que contengan casos incompletos (con NA's)
+      raros <- data[!complete.cases(data[, -c(6, 7)]), ]
+      # Escogemos los registros que contengan casos completos (sin NA's)
+      data <- data[complete.cases(data[, -c(6, 7)]), ]
+      # Arrojamos un mensaje en caso de que existan casos incompletos
       if(nrow(raros)!=0){
-            message("Existen registros incompletos")
+            message("Existen registros incompletos para Swaps2 Plazo")
       }
       
       # ===== Tipo de Institución =====
@@ -68,6 +69,11 @@ swaps2_plazo <- function(ruta){
       # Realiza la diferencia entre fechas, excepto cuando no haya fecha de liquidación
       data$PLAZO <- as.numeric(as.Date(nueva_fecha) - as.Date(data$FE_CON_OPE))
       
+      if(any(data$PLAZO < 0)){
+            data$PLAZO[data$PLAZO < 0] <- 0
+            message("Existen plazos negativos en SWAPS2 Plazo")
+      }
+      
       # ===== BANDA =====
       # Matriz de bandas
       bandas <- matrix(0, nrow=14, ncol=2)
@@ -84,5 +90,10 @@ swaps2_plazo <- function(ruta){
       # ===== WRITE =====
       write.dbf(data, paste("swaps2_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
-      data
+      if(nrow(raros)!=0){
+            resultado <- list(cuadro=data, raros=raros)
+            invisible(resultado)
+      } else{
+            invisible(data)
+      }
 }
