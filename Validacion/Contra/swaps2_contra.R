@@ -14,12 +14,12 @@ swaps2_contra <- function(ruta){
             # fix.dbf
       
       # SALIDA
-      # swaps1_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
+      # swaps2_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd(paste(ruta, "/SWAPS/", sep="")) # ¿Dónde están mis datos?
+      setwd(paste(ruta, "SWAPS/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Librería necesaria para cargar los datos
-      options(scipen=999, digits=5) # Quita la notación exp y trunca a 4 decimales
+      options(scipen=999, digits=10) # Quita la notación exp y trunca a 4 decimales
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps2.dbf", as.is=T)
@@ -30,12 +30,15 @@ swaps2_contra <- function(ruta){
       clave_deri <- read.csv("clave_deri.csv", as.is=T, )
       
       # ===== Código =====
-      data <- data[complete.cases(data$FE_CON_OPE, data$C_IMP_BASE, data$MDA_IMP, 
-                                  data$C_IMP_BA_D, data$CONT, data$TIP_CONT), ]
-      raros <- data[!complete.cases(data$FE_CON_OPE, data$C_IMP_BASE, data$MDA_IMP, 
-                                   data$C_IMP_BA_D, data$CONT, data$TIP_CONT), ]
+      # apply(data, 2, function(x) any(is.na(x)))
+      
+      # Colocamos los registros que contengan casos incompletos (con NA's)
+      raros <- data[!complete.cases(data[, -c(6, 7)]), ]
+      # Escogemos los registros que contengan casos completos (sin NA's)
+      data <- data[complete.cases(data[, -c(6, 7)]), ]
+      # Arrojamos un mensaje en caso de que existan casos incompletos
       if(nrow(raros)!=0){
-            message("Existen registros incompletos")
+            message("Existen registros incompletos para Swaps2 Contra")
       }
       
       # ===== Tipo de Institucion =====
@@ -112,5 +115,10 @@ swaps2_contra <- function(ruta){
       # Escribe el cuadro (.dbf) en el directorio de trabajo
       write.dbf(data, paste("swaps2_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
-      data
+      if(nrow(raros)!=0){
+            resultado <- list(cuadro=data, raros=raros)
+            invisible(resultado)
+      } else{
+            invisible(data)
+      }
 }
