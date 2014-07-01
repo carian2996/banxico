@@ -1,15 +1,25 @@
-# Ian Castillo Rosales
-# 26062014
+# Ian Castillo Rosales (BANXICO\T41348)
+# Gerencia de Información del Sistema Financiero
+# Subgerencia de Información de Moneda Extranjera y Derivados
+# 
+# Validación de información para operaciones con opciones
+# 090614 - 010714
 
-off_plazo <- function(){
+off_plazo <- function(ruta){
+      
+      # ENTRADA
+      # ruta = Ruta donde se encuentran los datos para los calculos
+            # derivado.dbf
+            # udi2013.dbf
+            # fix.dbf
+      
       # SALIDA
       # off_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd("/Volumes/IAN/Estadisticas/Plazo/OFF") # ¿Dónde están mis datos?
+      setwd(paste(ruta, "/OFF/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999)
-      options(encoding="UFT-8")
+      options(scipen=999, digits=8)
       
       # ===== Carga de datos =====
       data <- read.dbf("derivado.dbf", as.is=T)
@@ -18,26 +28,28 @@ off_plazo <- function(){
       fix <- read.dbf("tcfix.dbf", as.is=T)
       
       # ===== Código =====
-      data <- data[complete.cases(data$FE_CON_OPE, data$FE_VEN_OPE, data$MDO, 
-                                  data$C_IMP_BASE, data$MDA_IMP, data$FE_LIQ_ORI), ]
-      raros <- data[!complete.cases(data$FE_CON_OPE, data$FE_VEN_OPE, data$MDO, 
-                                   data$C_IMP_BASE, data$MDA_IMP, data$FE_LIQ_ORI), ]
+      # apply(data, 2, function(x) any(is.na(x)))
+      
+      raros <- data[!complete.cases(data[, names(data)[1:8]]), ]
+      data <- data[complete.cases(data[, names(data)[1:8]]), ]
       
       if(nrow(raros)!=0){
-            message("Existen registros incompletos")
+            message("Existen registros incompletos en OFF Plazo")
       }
       
-      data$FE_CON_OPE <- as.Date(data$FE_CON_OPE) # Cambiar tipo caractér a tipo fecha
-      data$FE_LIQ_ORI <- as.Date(data$FE_LIQ_ORI)
-      
       # ===== UDIS y FIX =====
-      data$UDIS <- udis$CIERRE[match(data$FE_CON_OPE, as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
-      data$FIX <- fix$CIERRE[match(data$FE_CON_OPE, as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
+      data$UDIS <- udis$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
+      data$FIX <- fix$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
       
       # ===== Plazo =====
       data$PLAZO <- NA # Crear columna de plazo
       # Realiza la diferencia entre fechas, excepto cuando no haya fecha de liquidación
-      data$PLAZO[!is.na(data$FE_LIQ_ORI)] <- as.numeric(data$FE_LIQ_ORI[!is.na(data$FE_LIQ_ORI)] - data$FE_CON_OPE[!is.na(data$FE_LIQ_ORI)])
+      data$PLAZO <- as.numeric(as.Date(data$FE_LIQ_ORI) - as.Date(data$FE_CON_OPE))
+      
+      if(any(data$PLAZO < 0)){
+            data$PLAZO[data$PLAZO < 0] <- 0
+            message("Existen plazos negativos en OFF Plazo")
+      }
       
       # ===== IMPORTE =====
       data$IMPORTE <- NA
@@ -63,16 +75,26 @@ off_plazo <- function(){
       # ===== BANDA =====
       # Matriz de bandas
       bandas <- matrix(0, nrow=14, ncol=2)
-      bandas[, 1] <- c(0, 8, 32, 93, 185, 367, 732, 1097, 1462, 1828, 2558, 3654, 5480, 7306)
-      bandas[, 2] <- c("1 a 7", "8 a 31", "32 a 92", "93 a 184", "185 a 366", "367 a 731", "732 a 1096", "1097 a 1461", "1462 a 1827", "1828 a 2557", "2558 a 3653", "3654 a 5479", "5480 a 7305", "Más de 7306")
+      bandas[, 1] <- c(0, 8, 32, 93, 185, 367, 732, 1097, 1462, 1828, 2558, 
+                       3654, 5480, 7306)
+      bandas[, 2] <- c("1 a 7", "8 a 31", "32 a 92", "93 a 184", "185 a 366", 
+                       "367 a 731", "732 a 1096", "1097 a 1461", "1462 a 1827", 
+                       "1828 a 2557", "2558 a 3653", "3654 a 5479", "5480 a 7305", 
+                       "Más de 7306")
       
       # Crear y renombrar columna de bandas
-      data$BANDAS <- NA
-      data$PLAZO[data$PLAZO < 0] <- 0
+      data$BANDA <- NA
       # Encuentra el intervalo y pone la banda
-      data$BANDAS <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
+      data$BANDA <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
       
       # ===== WRITE =====
       # Escribe el cuadro (.dbf) en el directorio de trabajo
-      write.dbf(data, paste("off_plazo_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
+      write.dbf(data, paste("off_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
+      
+      if(nrow(raros)!=0){
+            resultado <- list(cuadro=data, raros=raros)
+            invisible(resultado)
+      } else{
+            invisible(data)
+      }
 }
