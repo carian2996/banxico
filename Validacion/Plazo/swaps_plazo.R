@@ -15,7 +15,7 @@ swaps_plazo_junta <- function(ruta){
       
       # ===== Librerias y directorios =====
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=10) # Quita la notación exp y trunca a 4 decimales
+      options(scipen=999, digits=8) # Quita la notación exp y trunca a 4 decimales
       
       # ===== Funciones =====
       source(paste(ruta, "R/swaps1_plazo.R", sep=""))
@@ -69,7 +69,8 @@ swaps_plazo_junta <- function(ruta){
       swaps[swaps$SECCION=="III", columnas] <- s3[, columnas]
       swaps[swaps$SECCION=="VI", columnas] <- s4[, columnas]
       
-      write.dbf(swaps, paste("swaps_plazo_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
+      # Escribe el cuadro (.xlsx) en el directorio de trabajo
+      write.dbf(swaps, paste("swaps_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       swaps
       # apply(swaps, 2, function(x) any(is.na(x)))
