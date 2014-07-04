@@ -93,7 +93,7 @@ swaps4_plazo <- function(ruta){
       data$IMPORTE_E[is.na(data$MDA_IMP_EN)] <- data2$IMPORTE_E
       
       data$IMPORTE <- NA
-      data$IMPORTE <- apply(data[, c(18, 19)], 1, max)
+      data$IMPORTE <- apply(data[, c("IMPORTE_R", "IMPORTE_E")], 1, max)
       
       # ===== Plazo =====
       # Calcula máximo entre fecha de entrega y fecha de recibo
@@ -120,7 +120,7 @@ swaps4_plazo <- function(ruta){
       data$BANDA <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
       
       # ===== WRITE =====
-      # Escribe el cuadro (.dbf) en el directorio de trabajo
+      # Escribe el cuadro (.xlsx) en el directorio de trabajo
       write.dbf(data, paste("swaps4_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       if(nrow(raros)!=0){

@@ -19,7 +19,7 @@ swaps3_plazo <- function(ruta){
       # ===== Librerias y directorios =====
       setwd(paste(ruta, "SWAPS/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=10) # Quita la notación exp y trunca a 4 decimales
+      options(scipen=999, digits=8) # Quita la notación exp y trunca a 4 decimales
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps3.dbf", as.is=T)
@@ -76,7 +76,7 @@ swaps3_plazo <- function(ruta){
       data$IMPORTE_E[!(data$MDA_IMP_EN=="MXP" | data$MDA_IMP_EN=="UDI" | data$MDA_IMP_EN=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_EN_D[!(data$MDA_IMP_EN=="MXP" | data$MDA_IMP_EN=="UDI" | data$MDA_IMP_EN=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP_EN=="MXP" | data$MDA_IMP_EN=="UDI" | data$MDA_IMP_EN=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
       
       # ===== Importe =====
-      data$IMPORTE <- apply(data[, c("IMPORTE_R", "IMPORTE_R")], 1, max)
+      data$IMPORTE <- apply(data[, c("IMPORTE_R", "IMPORTE_E")], 1, max)
       
       # ===== Plazo =====
       # Calcula máximo entre fecha de entrega y fecha de recibo
@@ -104,7 +104,7 @@ swaps3_plazo <- function(ruta){
       data$BANDA <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
       
       # ===== WRITE =====
-      # Escribe el cuadro (.dbf) en el directorio de trabajo
+      # Escribe el cuadro (.xlsx) en el directorio de trabajo
       write.dbf(data, paste("swaps3_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       if(nrow(raros)!=0){

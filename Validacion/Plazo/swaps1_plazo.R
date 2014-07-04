@@ -52,7 +52,7 @@ swaps1_plazo <- function(ruta){
       
       # ===== IMPORTE =====
       data$IMPORTE <- NA
-      # Calculamos importe en base a condiciones
+      
       data$IMPORTE[data$MDA_IMP=="MXP"] <- data$C_IMP_BASE[data$MDA_IMP=="MXP"]/2000
       data$IMPORTE[data$MDA_IMP=="UDI"] <- data$C_IMP_BASE[data$MDA_IMP=="UDI"]*data$UDIS[data$MDA_IMP=="UDI"]/2000
       data$IMPORTE[data$MDA_IMP=="USD"] <- data$C_IMP_BASE[data$MDA_IMP=="USD"]*data$FIX[data$MDA_IMP=="USD"]/2000
@@ -83,7 +83,7 @@ swaps1_plazo <- function(ruta){
       data$BANDA <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
       
       # ===== WRITE =====
-      # Escribe el cuadro (.dbf) en el directorio de trabajo
+      # Escribe el cuadro (.xlsx) en el directorio de trabajo
       write.dbf(data, paste("swaps1_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       if(nrow(raros)!=0){
