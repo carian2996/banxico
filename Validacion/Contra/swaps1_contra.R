@@ -1,8 +1,8 @@
 # Ian Castillo Rosales (BANXICO\T41348)
-# Gerencia de Información del Sistema Financiero
-# Subgerencia de Información de Moneda Extranjera y Derivados
+# Gerencia de Informacion del Sistema Financiero
+# Subgerencia de Informacion de Moneda Extranjera y Derivados
 # 
-# Validación de información para operaciones con swaps (contraparte)
+# Validacion de informacion para operaciones con swaps (contraparte)
 # 090614 - 010714
 
 swaps1_contra <- function(ruta){
@@ -17,9 +17,9 @@ swaps1_contra <- function(ruta){
       # swaps1_contra_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd(paste(ruta, "SWAPS/", sep="")) # ¿Dónde están mis datos?
+      setwd(paste(ruta, "SWAPS/", sep="")) # Donde estan mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=10)
+      options(scipen=999, digits=8)
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps1.dbf", as.is=T)
@@ -29,7 +29,7 @@ swaps1_contra <- function(ruta){
 
       clave_deri <- read.csv("clave_deri.csv", as.is=T)
       
-      # ===== Código =====
+      # ===== Codigo =====
       # apply(data, 2, function(x) any(is.na(x)))
       
       # Colocamos los registros que contengan casos incompletos (con NA's)
@@ -61,8 +61,8 @@ swaps1_contra <- function(ruta){
       data$SECTOR <- "Mercado Mexicano de Derivados"
       
       # ===== WRITE =====
-      # Escribe el cuadro (.dbf) en el directorio de trabajo
-      write.dbf(data, paste("swaps1_contra_", format(Sys.Date()[1], "%d%m%Y"), "dbf", sep=""))
+      # Escribe el cuadro (.xlsx) en el directorio de trabajo
+      write.dbf(data, paste("swaps1_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       if(nrow(raros)!=0){
             resultado <- list(cuadro=data, raros=raros)
