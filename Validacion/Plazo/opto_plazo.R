@@ -3,7 +3,7 @@
 # Subgerencia de Información de Moneda Extranjera y Derivados
 # 
 # Validación de información para operaciones con opciones
-# 230614 - 300414
+# 230614 - 020714
 
 opto_plazo <- function(ruta){
       
@@ -17,9 +17,9 @@ opto_plazo <- function(ruta){
       # opto_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd(paste(ruta, "/OPTO/", sep="")) # ¿Dónde están mis datos?
+      setwd(paste(ruta, "OPTO/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=5)
+      options(scipen=999, digits=8)
 
       # ===== Carga de datos =====
       data <- read.dbf("opto.dbf", as.is=T)
@@ -28,20 +28,15 @@ opto_plazo <- function(ruta){
       fix <- read.dbf("tcfix.dbf", as.is=T)
       
       # ===== Codigo ====
-      nrow(data[data$CO, ])
+      # apply(data, 2, function(x) any(is.na(x)))
+      
       # Colocamos los registros que contengan casos incompletos (con NA's)
-      raros <- data[!complete.cases(data$TIP_INSTI, data$FE_CON_OPE, data$FE_VEN_OPE, 
-                                    data$MDO, data$TIP_OPE, data$OPC, data$CLASE_OPE,
-                                    data$C_IMP_BASE, data$MDA_IMP, data$FE_VEN_ORI, 
-                                    data$CONSEC_CF, data$ID_CF), ]
+      raros <- data[!complete.cases(data[, -c(3, 13, 15, 17)]), ]
       # Escogemos los registros que contengan casos completos (sin NA's)
-      data <- data[complete.cases(data$TIP_INSTI, data$FE_CON_OPE, data$FE_VEN_OPE, 
-                                  data$MDO, data$TIP_OPE, data$OPC, data$CLASE_OPE,
-                                  data$C_IMP_BASE, data$MDA_IMP, data$FE_VEN_ORI, 
-                                  data$CONSEC_CF, data$ID_CF), ]
+      data <- data[complete.cases(data[, -c(3, 13, 15, 17)]), ]
       # Arrojamos un mensaje en caso de que existan casos incompletos
       if(nrow(raros)!=0){
-            message("¡Existen registros incompletos!")
+            message("¡Existen registros incompletos en OPTO Plazo!")
       }
       
       # ===== Tipo de Institucion =====
@@ -93,7 +88,7 @@ opto_plazo <- function(ruta){
       
       if(sum(data$PLAZO[!is.na(data$PLAZO)] < 0)!=0){
             data$PLAZO[data$PLAZO < 0] <- 0
-            message("¡Existen plazos negativos!")
+            message("¡Existen plazos negativos en OPTO Plazo!")
       }
       
       # ===== BANDA =====
@@ -110,8 +105,13 @@ opto_plazo <- function(ruta){
       data$BANDA <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
       
       # ===== WRITE =====
-      # Escribe el cuadro (.dbf) en el directorio de trabajo
-      write.dbf(data, paste("cuadro_opto_plazo_", format(Sys.Date()[1], "%d_%m_%Y"), ".dbf", sep=""))
+      # Escribe el cuadro en el directorio de trabajo
+      write.dbf(data, paste("opto_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
-      data
+      if(nrow(raros)!=0){
+            resultado <- list(cuadro=data, raros=raros)
+            invisible(resultado)
+      } else{
+            invisible(data)
+      }
 }
