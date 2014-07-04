@@ -1,9 +1,9 @@
 # Ian Castillo Rosales (BANXICO\T41348)
-# Gerencia de Información del Sistema Financiero
-# Subgerencia de Información de Moneda Extranjera y Derivados
+# Gerencia de Informacion del Sistema Financiero
+# Subgerencia de Informacion de Moneda Extranjera y Derivados
 # 
-# Validación de información para operaciones con opciones
-# 090614 - 010714
+# Validacion de informacion para operaciones con opciones
+# 090614 - 030714
 
 off_plazo <- function(ruta){
       
@@ -17,7 +17,7 @@ off_plazo <- function(ruta){
       # off_plazo_[fecha].dbf - Archivo tipo .dbf con los resultados
       
       # ===== Librerias y directorios =====
-      setwd(paste(ruta, "/OFF/", sep="")) # ¿Dónde están mis datos?
+      setwd(paste(ruta, "OFF/", sep="")) # Donde estan mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
       options(scipen=999, digits=8)
       
@@ -41,16 +41,6 @@ off_plazo <- function(ruta){
       data$UDIS <- udis$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
       data$FIX <- fix$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
       
-      # ===== Plazo =====
-      data$PLAZO <- NA # Crear columna de plazo
-      # Realiza la diferencia entre fechas, excepto cuando no haya fecha de liquidación
-      data$PLAZO <- as.numeric(as.Date(data$FE_LIQ_ORI) - as.Date(data$FE_CON_OPE))
-      
-      if(any(data$PLAZO < 0)){
-            data$PLAZO[data$PLAZO < 0] <- 0
-            message("Existen plazos negativos en OFF Plazo")
-      }
-      
       # ===== IMPORTE =====
       data$IMPORTE <- NA
       
@@ -71,6 +61,16 @@ off_plazo <- function(ruta){
       data$IMPORTE[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$FIX[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/1000
       
       data$IMPORTE[data$ID_SPOT=="S"] <- 0
+
+      # ===== Plazo =====
+      data$PLAZO <- NA # Crear columna de plazo
+      # Realiza la diferencia entre fechas, excepto cuando no haya fecha de liquidacion
+      data$PLAZO <- as.numeric(as.Date(data$FE_LIQ_ORI) - as.Date(data$FE_CON_OPE))
+      
+      if(any(data$PLAZO < 0)){
+            data$PLAZO[data$PLAZO < 0] <- 0
+            message("Existen plazos negativos en OFF Plazo")
+      }
       
       # ===== BANDA =====
       # Matriz de bandas
@@ -88,7 +88,6 @@ off_plazo <- function(ruta){
       data$BANDA <- bandas[, 2][findInterval(data$PLAZO, as.numeric(bandas[, 1]))]
       
       # ===== WRITE =====
-      # Escribe el cuadro (.dbf) en el directorio de trabajo
       write.dbf(data, paste("off_plazo_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
       
       if(nrow(raros)!=0){
