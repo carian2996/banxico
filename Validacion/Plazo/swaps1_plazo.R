@@ -6,7 +6,7 @@
 # 040614 - 010714
 
 swaps1_plazo <- function(ruta){
-
+      
       # ENTRADA
       # ruta = Ruta donde se encuentran los datos para los calculos
             # swaps1.dbf
@@ -19,7 +19,7 @@ swaps1_plazo <- function(ruta){
       # ===== Librerias y directorios =====
       setwd(paste(ruta, "SWAPS/", sep="")) # ¿Dónde están mis datos?
       library(foreign) # Libreria necesaria para cargar los datos
-      options(scipen=999, digits=10) # Quita la notación exp y trunca a 4 decimales
+      options(scipen=999, digits=8) # Quita la notación exp y trunca a 4 decimales
       
       # ===== Carga de datos =====
       data <- read.dbf("swaps1.dbf", as.is=T)
