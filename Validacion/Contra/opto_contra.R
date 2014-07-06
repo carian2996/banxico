@@ -6,7 +6,7 @@
 # 090614 - 030714
 
 opto_contra <- function(ruta){
-      
+      ruta="/Volumes/IAN/Estadisticas/Contraparte/"
       # ENTRADA
       # ruta = Ruta donde se encuentran los datos para los calculos
             # opto.dbf
@@ -51,35 +51,39 @@ opto_contra <- function(ruta){
       data$FIX <- fix$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
       
       # ===== Importe =====
+      
       data$IMPORTE <- NA
       
       data$IMPORTE[data$MDO!="E" & data$MDA_IMP=="01"] <- data$C_IMP_BASE[data$MDO!="E" & data$MDA_IMP=="01"]/2000
       data$IMPORTE[data$MDO!="E" & data$MDA_IMP=="02"] <- data$C_IMP_BASE[data$MDO!="E" & data$MDA_IMP=="02"]*data$UDIS[data$MDO!="E" & data$MDA_IMP=="02"]/2000
       data$IMPORTE[data$MDO!="E" & data$MDA_IMP=="10"] <- data$C_IMP_BASE[data$MDO!="E" & data$MDA_IMP=="10"]*data$FIX[data$MDO!="E" & data$MDA_IMP=="10"]/2000
-      data$IMPORTE[data$MDO!="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10")] <- data$C_IMP_BASE[data$MDO!="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10")]*data$FIX[data$MDO!="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10")]/2000
       
       data$IMPORTE[data$MDO=="E" & data$MDA_IMP=="01" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & data$MDA_IMP=="01" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/2000
       data$IMPORTE[data$MDO=="E" & data$MDA_IMP=="02" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & data$MDA_IMP=="02" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$UDIS[data$MDO=="E" & data$MDA_IMP=="02" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/2000
       data$IMPORTE[data$MDO=="E" & data$MDA_IMP=="10" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & data$MDA_IMP=="10" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$FIX[data$MDO=="E" & data$MDA_IMP=="10" & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/2000
-      data$IMPORTE[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$FIX[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & (data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/2000
+      if(any(is.na(match(unique(data$MDA_IMP), c("01", "02", "10"))))){
+            data$IMPORTE[!(data$MDA_IMP=="01" | data$MDA_IMP=="02" | data$MDA_IMP=="10") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BA_D[!(data$MDA_IMP=="01" | data$MDA_IMP=="02" | data$MDA_IMP=="10") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP=="01" | data$MDA_IMP=="02" | data$MDA_IMP=="10") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/2000
+      }
       
       data$IMPORTE[data$MDO=="E" & data$MDA_IMP=="01" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & data$MDA_IMP=="01" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/1000
       data$IMPORTE[data$MDO=="E" & data$MDA_IMP=="02" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & data$MDA_IMP=="02" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$UDIS[data$MDO=="E" & data$MDA_IMP=="02" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/1000
       data$IMPORTE[data$MDO=="E" & data$MDA_IMP=="10" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & data$MDA_IMP=="10" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$FIX[data$MDO=="E" & data$MDA_IMP=="10" & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/1000
-      data$IMPORTE[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")] <- data$C_IMP_BASE[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]*data$FIX[data$MDO=="E" & !(data$MDA_IMP=="01" & data$MDA_IMP=="02" & data$MDA_IMP=="10") & !(data$TIP_CONT=="RIC" | data$TIP_CONT=="RCB")]/1000
+      if(any(is.na(match(unique(data$MDA_IMP), c("01", "02", "10"))))){
+            data$IMPORTE[!(data$MDA_IMP=="01" | data$MDA_IMP=="02" | data$MDA_IMP=="10") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BA_D[!(data$MDA_IMP=="01" | data$MDA_IMP=="02" | data$MDA_IMP=="10") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP=="01" | data$MDA_IMP=="02" | data$MDA_IMP=="10") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
+      }
       
       data$IMPORTE[data$INDICA_CF=="S" & data$CONSEC_CF!=1] <- 0
       
       # ===== Clase de Operaciones =====
       data$CLASE_OPER <- "Exotica"
-      
-      data$CLASE_OPER[data$CLASE_OPE == "WARRANT"] <- "Warrant"
-      data$CLASE_OPER[data$CLASE_OPE == "SWAPTION"] <- "Exotica"
-      
+
       data$CLASE_OPER[data$OPC=="A" & data$INDICA_CF=="N" & is.na(data$OPE_SUBY)] <- "Estandar"
       data$CLASE_OPER[data$OPC=="E" & data$INDICA_CF=="N" & is.na(data$OPE_SUBY)] <- "Estandar"
       data$CLASE_OPER[data$OPC=="A" & is.na(data$INDICA_CF) & is.na(data$OPE_SUBY)] <- "Estandar"
       data$CLASE_OPER[data$OPC=="E" & is.na(data$INDICA_CF) & is.na(data$OPE_SUBY)] <- "Estandar"
+      
+      data$CLASE_OPER[data$CLASE_OPE == "WARRANT"] <- "Warrant"
+      data$CLASE_OPER[data$CLASE_OPE == "SWAPTION"] <- "Exotica"
       
       # ===== Tipo de Entidad y Residencia ====
       data$TIPO_ENTE <- NA
