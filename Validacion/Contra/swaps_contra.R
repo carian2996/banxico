@@ -6,7 +6,7 @@
 # 230614 - 300414
 
 swaps_contra_junta <- function(ruta){
-      ruta="/Volumes/IAN/Estadisticas/Contraparte/"
+      
       # ENTRADA
       # ruta = Ruta donde se encuentran los archivos .R para los calculos
       
