@@ -57,12 +57,18 @@ swaps2_contra <- function(ruta){
       data$IMPORTE[data$MDA_IMP=="MXP" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BASE[data$MDA_IMP=="MXP" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/2000
       data$IMPORTE[data$MDA_IMP=="UDI" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BASE[data$MDA_IMP=="UDI" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$UDIS[data$MDA_IMP=="UDI" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/2000
       data$IMPORTE[data$MDA_IMP=="USD" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BASE[data$MDA_IMP=="USD" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[data$MDA_IMP=="USD" & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/2000
-      data$IMPORTE[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BA_D[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/2000
+      
+      if(any(is.na(match(unique(data$MDA_IMP), c("MXP", "UDI", "USD"))))){
+            data$IMPORTE[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BA_D[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & (data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/2000
+      }
       
       data$IMPORTE[data$MDA_IMP=="MXP" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BASE[data$MDA_IMP=="MXP" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
       data$IMPORTE[data$MDA_IMP=="UDI" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BASE[data$MDA_IMP=="UDI" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$UDIS[data$MDA_IMP=="UDI" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
       data$IMPORTE[data$MDA_IMP=="USD" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BASE[data$MDA_IMP=="USD" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[data$MDA_IMP=="USD" & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
-      data$IMPORTE[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BA_D[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
+      
+      if(any(is.na(match(unique(data$MDA_IMP), c("MXP", "UDI", "USD"))))){
+            data$IMPORTE[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")] <- data$C_IMP_BA_D[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]*data$FIX[!(data$MDA_IMP=="MXP" | data$MDA_IMP=="UDI" | data$MDA_IMP=="USD") & !(data$TIP_CONT=="RCB" | data$TIP_CONT=="RIC")]/1000
+      }
       
       # ===== Tipo de Entidad y Residencia ====
       data$TIPO_ENTE <- NA
