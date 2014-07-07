@@ -37,6 +37,11 @@ off_plazo <- function(ruta){
             message("Existen registros incompletos en OFF Plazo")
       }
       
+      # ===== Clase de operacion =====
+      data$CLASE_OPE <- NA
+      data$CLASE_OPE[data$MDO=="E"] <- "FORWARD"
+      data$CLASE_OPE[data$MDO!="E"] <- "FUTURO"
+      
       # ===== UDIS y FIX =====
       data$UDIS <- udis$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(udis$FE_PUBLI))] # Buscar UDIS y unir con datos
       data$FIX <- fix$CIERRE[match(as.Date(data$FE_CON_OPE), as.Date(fix$FE_PUBLI))] # Buscar FIX y unir con datos
