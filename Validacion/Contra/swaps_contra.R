@@ -50,7 +50,7 @@ swaps_contra_junta <- function(ruta){
       s1$SECCION <- "I"
       s2$SECCION <- "II"
       s3$SECCION <- "III"
-      s4$SECCION <- "VI"
+      s4$SECCION <- "IV"
       
       columnas <- c("INSTI", "FE_CON_OPE", "TIPO_INST", "IMPORTE", "SECTOR", "SECCION")
       swaps <- data.frame(matrix(NA, nrow=sum(nrow(s1), nrow(s2), nrow(s3), 
@@ -65,7 +65,7 @@ swaps_contra_junta <- function(ruta){
       swaps[swaps$SECCION=="I", ] <- s1[, 1:12]
       swaps[swaps$SECCION=="II", columnas] <- s2[, columnas]
       swaps[swaps$SECCION=="III", columnas] <- s3[, columnas]
-      swaps[swaps$SECCION=="VI", columnas] <- s4[, columnas]
+      swaps[swaps$SECCION=="IV", columnas] <- s4[, columnas]
       
       # Escribe el cuadro (.xlsx) en el directorio de trabajo
       write.dbf(swaps, paste("swaps_contra_", format(Sys.Date()[1], "%d%m%Y"), ".dbf", sep=""))
