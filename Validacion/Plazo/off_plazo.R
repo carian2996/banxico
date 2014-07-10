@@ -89,7 +89,7 @@ off_plazo <- function(ruta){
       bandas[, 2] <- c("1 a 7", "8 a 31", "32 a 92", "93 a 184", "185 a 366", 
                        "367 a 731", "732 a 1096", "1097 a 1461", "1462 a 1827", 
                        "1828 a 2557", "2558 a 3653", "3654 a 5479", "5480 a 7305", 
-                       "Más de 7306")
+                       "mas de 7306")
       
       # Crear y renombrar columna de bandas
       data$BANDA <- NA
