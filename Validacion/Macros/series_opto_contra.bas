@@ -1,6 +1,4 @@
-
 Sub seriesOPTO()
-
 
 Dim macro As String, ruta As String, tcfix As String, udi As String, ruta2 As String, plazo As String
 Dim j As Integer
