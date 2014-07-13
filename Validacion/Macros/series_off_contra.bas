@@ -1,4 +1,4 @@
-Attribute VB_Name = "series_off"
+
 Sub seriesOFF()
 
 Dim macro As String, derivado As String, MaxCol As String
