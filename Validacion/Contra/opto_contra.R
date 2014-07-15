@@ -28,6 +28,7 @@ opto_contra <- function(ruta){
       fix <- read.dbf("tcfix.dbf", as.is=T)
       
       clave_deri <- read.csv("clave_deri.csv", as.is=T)
+      clave_deri$clave_deri <- sprintf("%06d", as.numeric(clave_deri$clave_deri)) # Saca warning por NA's
       
       # ===== Codigo ====
       # apply(data, 2, function(x) any(is.na(x)))
