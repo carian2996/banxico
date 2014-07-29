@@ -9,9 +9,14 @@
 
 # = Institucion
 # = Fecha de concertacion
+# = Tipo de operacion
+# = Tipo de opcion
 # = Importe base
 # = Precio de ejercicio
-# = Subyacente 
+# = Subyacente
+# Si MDO != E => = MDO
+# Si MDO == E => = CONT
+
 
 # Ademas cumple con lo siguiente:
 # La fecha de vencimiento para los derivados del paquete
@@ -20,6 +25,7 @@
 # derivado son iguales.
 
 find_packages <- function(ruta, file_name, n_records, n_fields) {
+      
       ruta = "/Volumes/IAN"
       file_name = "base_paquetes_divisas.csv"
       
@@ -48,46 +54,43 @@ find_packages <- function(ruta, file_name, n_records, n_fields) {
             message("Existen registros incompletos la base")
       }
       
-      precios <- subset(count(data, "PREC_EJE"), freq >= 2)
-      new_data <- match_df(data, precios, on="PREC_EJE")
-
-      importe_base <- subset(count(new_data, "IMP_BASE"), freq >= 2)
-      new_data <- match_df(new_data, importe_base, on="IMP_BASE")
+      # ========== Eliminar los registros que no pueden ser paquete ==========      
+      features <- c("INSTI", "FE_CON_OPE", "TIP_OPE", "OPC", "PREC_EJE", "SUBY")
+      conteos <- subset(count(data, features), freq >= 2)
+      new_data <- match_df(data, conteos, on = features)
       
-      institucion <- subset(count(new_data, "INSTI"), freq >= 2)
-      new_data <- match_df(new_data, institucion, on="INSTI")
+      conteos <- subset(count(new_data[new_data$MDO == "E", ], "CONT"), freq >= 2)
+      new_data1 <- match_df(new_data[new_data$MDO == "E", ], conteos, on = "CONT")
       
-      fecha_con <- subset(count(new_data, "FE_CON_OPE"), freq >= 2)
-      new_data <- match_df(new_data, fecha_con, on="FE_CON_OPE")
+      conteos <- subset(count(new_data[new_data$MDO != "E", ], "CONT"), freq >= 2)
+      new_data2 <- match_df(new_data[new_data$MDO != "E", ], conteos, on = "CONT")
       
-      subyacentes <- sort(unique(data$SUBY))
-      list_packages <- list()
+      new_data <- rbind(new_data1, new_data2)
       
-      for(i in seq_along(subyacentes)){
-            
-            new_data <- data[data$SUBY == subyacentes[i], ]
-            precios <- sort(unique(new_data$PREC_EJE))
-            precios <- precios[table(new_data$PREC_EJE) >= 2]
-            new_data <- new_data[new_data$PREC_EJE %in% precios, ]
-            
-            imp_base <- sort(unique(new_data$IMP_BASE))
-            imp_base <- imp_base[table(new_data$IMP_BASE) >= 2]
-            new_data <- new_data[new_data$IMP_BASE %in% imp_base, ]
-            
-            insti <- sort(unique(new_data$INSTI))
-            insti <- insti[table(new_data$INSTI) >= 2]
-            new_data <- new_data[new_data$INSTI %in% insti, ]
-            
-            fecha_con <- sort(unique(new_data$FE_CON_OPE))
-            fecha_con <- fecha_con[table(new_data$FE_CON_OPE) >= 2]
-            new_data <- new_data[new_data$FE_CON_OPE %in% fecha_con, ]
-            
-            list_packages[[i]] <- new_data
+      # ========== Separar por subyacente ==========
+      data_suby <- dlply(new_data, .(new_data$SUBY), function(x) x)
+      
+      ordena <- function(x){
+            x <- arrange(x, x$PREC_EJE, x$IMP_BASE, x$FE_VEN_OPE)
+            x
       }
       
-      names(list_packages) <- subyacentes
+      data_suby <- llply(data_suby, ordena)
       
-      new_data <- list_packages[subyacentes[8]][[1]]
-      dlply(new_data, .(new_data$PREC_EJE), nrow)
-
+      paquetes <- function(x){
+            x <- data_suby[[8]]
+            subyacente <- unique(x$SUBY)
+            x$diff <- c(0, diff(as.Date(x$FE_VEN_OPE, "%Y/%m/%d")))
+            
+            consec <- x[x$ID %in% x[x$diff > 0, ]$ID, ]
+            consec_ant <- x[x$ID %in% (x[x$diff > 0, ]$ID - 1) & x$SUBY == subyacente, ]
+            
+            x <- rbind(consec, consec_ant)
+            x <- x[!duplicated(x), ]
+      }
+      
+      data_suby <- llply(data_suby, paquetes)
+      data_suby <- llply(data_suby, ordena)
 }
+
+x <- data_suby[[8]]
